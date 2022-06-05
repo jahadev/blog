@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const { redirect } = require("express/lib/response");
+const mongoose = require("mongoose");
 const _ = require("lodash");
 
 const homeStartingContent =
@@ -16,11 +17,15 @@ const contactStartingContent =
 const app = express();
 
 app.set("view engine", "ejs");
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-let posts = [];
+mongoose.connect("mongodb://localhost:27017/blogDB");
+const postSchema = {
+  title: String,
+  content: String,
+};
+const Post = mongoose.model("Post", postSchema);
 
 app.get("/", function (req, res) {
   res.render("home", { blogPosts: posts });
@@ -39,11 +44,11 @@ app.get("/compose", function (req, res) {
 });
 
 app.post("/compose", function (req, res) {
-  const post = {
+  const post = new Post({
     title: req.body.postTitle,
     content: req.body.postBody,
-  };
-  posts.push(post);
+  });
+  post.save();
   res.redirect("/");
 });
 
